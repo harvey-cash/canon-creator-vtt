@@ -15,6 +15,7 @@ services:
     build:
       context: .
       dockerfile: packages/api/Dockerfile
+      target: development
     ports:
       - "3000:3000"
     depends_on:
@@ -34,6 +35,8 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_TARGET=http://api:3000
+    depends_on:
+      - api
     volumes:
       - ./packages/web:/usr/src/app/packages/web
       - /usr/src/app/packages/web/node_modules

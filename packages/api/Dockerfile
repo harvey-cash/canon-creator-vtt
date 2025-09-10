@@ -1,54 +1,45 @@
-# 1. Base Image
-FROM node:20 AS base
-
-# Set working directory
+# Stage 1: A 'development' stage that includes ALL dependencies
+FROM node:20 AS development
 WORKDIR /usr/src/app
-
-# 2. Install Dependencies
-# Use a separated dependency stage to leverage build cache
-FROM base AS deps
-# Install pnpm
 RUN npm install -g pnpm
-# Copy only the necessary package manifests to leverage cache
+
+# Copy manifests and install ALL dependencies (including devDependencies)
 COPY package.json pnpm-lock.yaml ./
 COPY packages/api/package.json ./packages/api/
 COPY packages/web/package.json ./packages/web/
-# Install dependencies for the 'api' package only
 RUN pnpm install --filter api
 
-# 3. Build the Application
-# Use a separated build stage for a smaller final image
-FROM base AS builder
-# Install pnpm in this stage as well
-RUN npm install -g pnpm
-# Copy dependencies from the 'deps' stage
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=deps /usr/src/app/packages ./packages
-COPY --from=deps /usr/src/app/package.json ./package.json
-# Copy the source code for the backend
-COPY packages/api/ ./packages/api/
-# Build the application
+# Copy the rest of the source code (will be overwritten by volume mount in dev)
+COPY . .
+
+# Default command for development, which docker-compose will use
+CMD ["pnpm", "--filter", "api", "run", "start:dev"]
+
+
+# --- Production Build Stages ---
+
+# Stage 2: A 'builder' stage for creating the production build
+FROM development AS builder
+# Build the NestJS application
 RUN pnpm --filter api run build
 
-# 4. Production Image
-# Use a slim image for the final production stage
-FROM base AS production
 
+# Stage 3: The final 'production' image, lean and optimized
+FROM node:20 AS production
 WORKDIR /usr/src/app
 ENV NODE_ENV production
-
-# Install pnpm in this stage
 RUN npm install -g pnpm
 
-# Copy only the package manifests needed for installation
+# Copy only production package manifests
 COPY package.json pnpm-lock.yaml ./
 COPY packages/api/package.json ./packages/api/
 
-# Install ONLY production dependencies for the 'api' package
+# Install ONLY production dependencies
 RUN pnpm install --filter api --prod
 
-# Copy the built application code from the builder stage
+# Copy the built application from the builder stage
 COPY --from=builder /usr/src/app/packages/api/dist ./packages/api/dist
 
-# Start the application
+# The command to start the production application
 CMD ["node", "packages/api/dist/main.js"]
+

@@ -11,7 +11,7 @@ function App() {
       .catch(() => setMessage('Failed to fetch from API'));
   }, []);
 
-  return <h1>{message}</h1>;
+  return <h1>{message}<h2>Isn't this exciting!?</h2></h1>;
 }
 
 export default App;
