@@ -1,0 +1,11 @@
+# Ignore artifacts
+dist
+coverage
+.turbo
+
+# Ignore dependencies
+node_modules
+
+# Ignore env files
+.env
+.env.*
