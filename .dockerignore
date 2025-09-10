@@ -1,0 +1,30 @@
+# Ignore Git history and configuration
+.git
+.gitignore
+
+# Ignore Docker-related files to prevent them from being included in the image
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore IDE and editor configuration files
+.vscode
+.idea
+
+# Ignore local dependency folders. Dependencies will be installed inside the container.
+node_modules
+packages/api/node_modules
+packages/web/node_modules
+
+# Ignore build output folders. These will be generated inside the container.
+dist
+packages/api/dist
+packages/web/dist
+
+# Ignore local environment variables. Secrets should be passed in at runtime, not built into the image.
+.env
+.env.*
+
+# Ignore log files and temporary files
+*.log
+npm-debug.log*
